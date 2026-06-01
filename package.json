@@ -1,0 +1,33 @@
+{
+  "name": "hrms",
+  "version": "1.0.0",
+  "private": true,
+  "description": "HRMS — Three-Tier International Human Resource Management System",
+  "workspaces": [
+    "packages/*",
+    "server",
+    "client"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "npm run dev --workspace=server",
+    "dev:client": "npm run dev --workspace=client",
+    "build": "npm run build --workspaces",
+    "lint": "npm run lint --workspaces",
+    "test": "npm run test --workspaces",
+    "typecheck": "npm run typecheck --workspaces",
+    "docker:up": "docker-compose up --build -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "db:migrate": "npm run migrate --workspace=server",
+    "db:seed": "npm run seed --workspace=server",
+    "db:reset": "npm run db:reset --workspace=server"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  }
+}

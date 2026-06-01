@@ -1,0 +1,43 @@
+{
+  "name": "@hrms/client",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "format": "prettier --write \"src/**/*.{ts,tsx,css}\""
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.26.0",
+    "@tanstack/react-query": "^5.51.0",
+    "zustand": "^4.5.4",
+    "axios": "^1.7.3",
+    "i18next": "^23.12.2",
+    "react-i18next": "^15.0.0",
+    "i18next-browser-languagedetector": "^8.0.0",
+    "lucide-react": "^0.424.0",
+    "recharts": "^2.12.7",
+    "react-hot-toast": "^2.4.1",
+    "clsx": "^2.1.1",
+    "date-fns": "^3.6.0",
+    "framer-motion": "^11.3.19"
+  },
+  "devDependencies": {
+    "vite": "^5.4.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "typescript": "^5.5.4",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "tailwindcss": "^4.0.0",
+    "@tailwindcss/vite": "^4.0.0",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.41",
+    "eslint": "^9.8.0",
+    "prettier": "^3.3.3"
+  }
+}

@@ -1,0 +1,121 @@
+version: '3.9'
+
+services:
+  # ─── PostgreSQL 16 ───
+  postgres:
+    image: postgres:16-alpine
+    container_name: hrms-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: hrms
+      POSTGRES_USER: hrms_admin
+      POSTGRES_PASSWORD: hrms_secure_password_change_me
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./server/src/db/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hrms_admin -d hrms"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── Redis 7 ───
+  redis:
+    image: redis:7-alpine
+    container_name: hrms-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── MinIO (S3-Compatible Storage) ───
+  minio:
+    image: minio/minio:latest
+    container_name: hrms-minio
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: hrms_minio_access
+      MINIO_ROOT_PASSWORD: hrms_minio_secret_change_me
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - miniodata:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── Backend (Node.js) ───
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: hrms-server
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      PORT: 4000
+      CLIENT_URL: http://localhost:5173
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: hrms
+      DB_USER: hrms_admin
+      DB_PASSWORD: hrms_secure_password_change_me
+      DATABASE_URL: postgresql://hrms_admin:hrms_secure_password_change_me@postgres:5432/hrms
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      MINIO_ENDPOINT: minio
+      MINIO_PORT: 9000
+      MINIO_ACCESS_KEY: hrms_minio_access
+      MINIO_SECRET_KEY: hrms_minio_secret_change_me
+      MINIO_BUCKET: hrms-documents
+      MINIO_USE_SSL: "false"
+      JWT_SECRET: dev-jwt-secret-change-in-production
+      JWT_EXPIRES_IN: 1d
+      JWT_REFRESH_SECRET: dev-refresh-secret-change-in-production
+      JWT_REFRESH_EXPIRES_IN: 7d
+      ENCRYPTION_KEY: a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./server/src:/app/src
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+
+  # ─── Frontend (Vite Dev) ───
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: hrms-client
+    restart: unless-stopped
+    environment:
+      VITE_API_URL: http://localhost:4000/api
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./client/src:/app/src
+      - ./client/public:/app/public
+    depends_on:
+      - server
+
+volumes:
+  pgdata:
+  redisdata:
+  miniodata:

@@ -1,0 +1,158 @@
+name: HRMS CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  lint-and-typecheck:
+    name: Lint & Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint server
+        run: npm run lint --workspace=server
+
+      - name: Lint client
+        run: npm run lint --workspace=client
+
+      - name: Typecheck server
+        run: npm run typecheck --workspace=server
+
+      - name: Typecheck client
+        run: npm run typecheck --workspace=client
+
+  test-server:
+    name: Server Tests
+    runs-on: ubuntu-latest
+    needs: lint-and-typecheck
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: hrms_test
+          POSTGRES_USER: hrms_admin
+          POSTGRES_PASSWORD: test_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run server tests
+        run: npm run test --workspace=server
+        env:
+          DATABASE_URL: postgresql://hrms_admin:test_password@localhost:5432/hrms_test
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+          JWT_SECRET: test-jwt-secret
+          JWT_REFRESH_SECRET: test-refresh-secret
+          ENCRYPTION_KEY: a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2
+          NODE_ENV: test
+
+  test-client:
+    name: Client Tests
+    runs-on: ubuntu-latest
+    needs: lint-and-typecheck
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run client tests
+        run: npm run test --workspace=client
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: [test-server, test-client]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build server
+        run: npm run build --workspace=server
+
+      - name: Build client
+        run: npm run build --workspace=client
+
+  docker:
+    name: Docker Build
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build server image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./server
+          push: false
+          tags: hrms-server:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build client image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./client
+          push: false
+          tags: hrms-client:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

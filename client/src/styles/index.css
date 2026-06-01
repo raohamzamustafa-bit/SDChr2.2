@@ -1,0 +1,135 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-sans: 'Inter', sans-serif;
+    --font-heading: 'Outfit', sans-serif;
+  }
+
+  body {
+    font-family: var(--font-sans);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+  }
+}
+
+/* Custom Glassmorphism Cards */
+.glass-card {
+  background: rgba(30, 41, 59, 0.45);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.glass-card-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card-hover:hover {
+  background: rgba(30, 41, 59, 0.6);
+  border-color: rgba(139, 92, 246, 0.3);
+  box-shadow: 0 12px 40px 0 rgba(139, 92, 246, 0.15);
+  transform: translateY(-2px);
+}
+
+/* Animated background gradient orbs */
+.bg-glow-orb-1 {
+  position: absolute;
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, rgba(99, 102, 241, 0.05) 50%, transparent 100%);
+  filter: blur(80px);
+  animation: orb-float 20s infinite alternate ease-in-out;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.bg-glow-orb-2 {
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(236, 72, 153, 0.12) 0%, rgba(139, 92, 246, 0.04) 50%, transparent 100%);
+  filter: blur(80px);
+  animation: orb-float-reverse 25s infinite alternate ease-in-out;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes orb-float {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  100% {
+    transform: translate(150px, 100px) scale(1.2);
+  }
+}
+
+@keyframes orb-float-reverse {
+  0% {
+    transform: translate(0, 0) scale(1.1);
+  }
+  100% {
+    transform: translate(-100px, -150px) scale(0.9);
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.3);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(139, 92, 246, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(139, 92, 246, 0.5);
+}
+
+/* Shimmer Loading Effect */
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(30, 41, 59, 0.5) 25%,
+    rgba(51, 65, 85, 0.5) 50%,
+    rgba(30, 41, 59, 0.5) 75%
+  );
+  background-size: 200% 100%;
+  animation: loading-shimmer 1.5s infinite;
+}
+
+@keyframes loading-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Page transitions */
+.page-transition {
+  animation: page-fade-in 0.4s ease-out;
+}
+
+@keyframes page-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
